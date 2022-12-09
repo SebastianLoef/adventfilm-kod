@@ -19,7 +19,7 @@ fourcc = cv2.VideoWriter_fourcc(*'FMP4')
 out = cv2.VideoWriter('output.avi', fourcc, 30, img.shape[:2])
 
 # Iterate over the desired resolution levels
-for level in range(1, img.shape[0] + 1):
+for level in range(1, (img.shape[0] + 1) * 2, 8):
 
     # Compute the inverse Fourier transform with the given resolution
     inverse = np.stack([np.fft.ifft2(fourier[i], (level, level)) for i in
@@ -29,13 +29,14 @@ for level in range(1, img.shape[0] + 1):
     result = np.abs(inverse)
     result = np.uint8(result / result.max() * 255)
     print(result.shape)
-
     # Resize the result to the original size of the image
     result = [cv2.resize(
         result[i], img[:, :, i].shape, interpolation=cv2.INTER_LINEAR)
         for i in range(3)]
-    result = np.uint8(np.stack(result)).reshape(img.shape[:2] + (3,))
-    print(result.shape, result.min(), result.max())
+    result = np.uint8(np.stack(result))
+    result = np.swapaxes(result, 0, -1)
+    result = np.swapaxes(result, 0, 1)
+    #print(result.shape, result.min(), result.max())
 
     # Add the frame to the output video
     out.write(result)
